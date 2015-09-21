@@ -1,0 +1,10 @@
+body {
+    text-align: center;
+    background-color: #000000;
+	background-image: url(http://www.transparenttextures.com/patterns/black-thread-light.png);
+	/* This is mostly intended for prototyping; please download the pattern and re-host for production environments. Thank you! */
+}
+canvas {
+   display : block;
+   margin : auto;
+}
