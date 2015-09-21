@@ -66,6 +66,7 @@ Player.prototype.fireBullet = function(bullet_type){
 
 }
 
+//Bullets
 var BulletGroup = function(game){
 	Phaser.Group.call(this, game);
 	this.enableBody = true;
@@ -81,12 +82,41 @@ var BulletGroup = function(game){
 BulletGroup.prototype = Object.create(Phaser.Group.prototype);
 BulletGroup.prototype.constructor = BulletGroup;
 
+//Enemies
+var EnemyGroup = function(game){
+	Phaser.Group.call(this, game);
+	game.add.group();
+	this.enableBody = true;
+	this.physicsBodyType = Phaser.Physics.ARCADE;
+	this.createMultiple(5, 'enemy');
+	this.setAll('anchor.x', 0.5);
+	this.setAll('anchor.y', 0.5);
+	this.setAll('outOfBoundsKill', true);
+	this.setAll('checkWorldBounds', true);
+}
+
+EnemyGroup.prototype = Object.create(Phaser.Group.prototype);
+EnemyGroup.prototype.constructor = EnemyGroup;
+
+EnemyGroup.prototype.launchEnemy = function(){
+	var MIN_ENEMY_SPACING = 300;
+	var MAX_ENEMY_SPACING = 3000;
+	var ENEMY_SPEED = 300;
+	var enemy = this.getFirstExists(false);
+	if (enemy) {
+			enemy.reset(game.rnd.integerInRange(0, game.width), -20);
+			enemy.body.velocity.x = game.rnd.integerInRange(-300, 300);
+			enemy.body.velocity.y = ENEMY_SPEED;
+			enemy.body.drag.x = 100;
+		}
+}
 
 //This function is used to load resources
 function preload() {
     game.load.image('starfield', 'images/blue.png');
     game.load.image('ship', 'images/player_ship.png');
     game.load.image('bullet', 'images/laser.png');
+    game.load.image('enemy', 'images/enemy.png');
     game.load.audio('laser', 'images/laser2.ogg')
 
 }
@@ -98,6 +128,9 @@ function create() {
     player = new Player(game);
     laser = game.add.audio('laser');
     bullets = new BulletGroup(game);
+    enemies = new EnemyGroup(game);
+    game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 10, function(){enemies.launchEnemy()}, this)
+   ;
 
     //controls
     cursors = game.input.keyboard.createCursorKeys();
