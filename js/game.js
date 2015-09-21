@@ -6,9 +6,17 @@ var cursors;
 var fire_button;
 var bulletTimer = 0;
 var laser;
+var music;
+var score = 0;
+var scoreText;
+var shields;
+var gameOver;
+var launchTimer;
+
 
 //Player entity, extends Sprite class
 var Player = function(game){
+	this.health = 20;
 	Phaser.Sprite.call(this, game, 0, 300, 'ship');
 	this.anchor.setTo(-0.25, 0);
 	game.add.existing(this);
@@ -34,7 +42,7 @@ Player.prototype.update = function(){
 	if(this.y < 0){
 		this.y= 0;
 	}
-	if (fire_button.isDown || game.input.activePointer.isDown) {
+	if (player.alive && fire_button.isDown || game.input.activePointer.isDown) {
 		this.fireBullet(bullets);
 
 	}
@@ -45,7 +53,7 @@ Player.prototype.fireBullet = function(bullet_type){
     if (game.time.now > bulletTimer)
     {
         var BULLET_SPEED = 400;
-        var BULLET_SPACING = 250;
+        var BULLET_SPACING = 400;
         //  Grab the first bullet we can from the pool
         var bullet = bullet_type.getFirstExists(false);
 
@@ -66,7 +74,8 @@ Player.prototype.fireBullet = function(bullet_type){
 
 }
 
-//Bullets
+
+//Bullet class extends Group
 var BulletGroup = function(game){
 	Phaser.Group.call(this, game);
 	this.enableBody = true;
@@ -82,7 +91,8 @@ var BulletGroup = function(game){
 BulletGroup.prototype = Object.create(Phaser.Group.prototype);
 BulletGroup.prototype.constructor = BulletGroup;
 
-//Enemies
+
+//Enemy class extends Group
 var EnemyGroup = function(game){
 	Phaser.Group.call(this, game);
 	game.add.group();
@@ -93,9 +103,10 @@ var EnemyGroup = function(game){
 	this.setAll('anchor.y', 0.5);
 	this.setAll('outOfBoundsKill', true);
 	this.setAll('checkWorldBounds', true);
-}
+	}
 
 EnemyGroup.prototype = Object.create(Phaser.Group.prototype);
+
 EnemyGroup.prototype.constructor = EnemyGroup;
 
 EnemyGroup.prototype.launchEnemy = function(){
@@ -117,7 +128,11 @@ function preload() {
     game.load.image('ship', 'images/player_ship.png');
     game.load.image('bullet', 'images/laser.png');
     game.load.image('enemy', 'images/enemy.png');
-    game.load.audio('laser', 'images/laser2.ogg')
+    game.load.spritesheet('explosion', 'images/explosion.png', 128, 128);
+    game.load.audio('laser', 'images/laser2.ogg');
+    game.load.audio('explode', 'images/explosion.ogg');
+    game.load.audio('music', 'images/sound.ogg');
+
 
 }
 
@@ -127,10 +142,32 @@ function create() {
     starfield = game.add.tileSprite(0, 0, 800, 600, 'starfield');
     player = new Player(game);
     laser = game.add.audio('laser');
+    explode = game.add.audio('explode');
+    music = game.add.audio('music');
     bullets = new BulletGroup(game);
     enemies = new EnemyGroup(game);
-    game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 10, function(){enemies.launchEnemy()}, this)
-   ;
+
+    music.play();
+   	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 100, function(){enemies.launchEnemy()}, this);
+
+	shields = game.add.text(game.world.width - 150, 10, 'Shields: ' + player.health +'%', { font: '20px Arial', fill: '#fff' });
+	shields.render = function () {
+	shields.text = 'Shields: ' + Math.max(player.health, 0) +'%';
+	};
+
+
+      //  Score
+	scoreText = game.add.text(10, 10, '', { font: '20px Arial', fill: '#fff' });
+	scoreText.render = function () {
+		scoreText.text = 'Score: ' + score;
+	};
+	scoreText.render();
+
+	//  Game over text
+	gameOver = game.add.text(game.world.centerX, game.world.centerY, 'GAME OVER!', { font: '84px Arial', fill: '#fff' });
+	gameOver.anchor.setTo(0.5, 0.5);
+	gameOver.visible = false;
+
 
     //controls
     cursors = game.input.keyboard.createCursorKeys();
@@ -141,14 +178,80 @@ function create() {
 function update() {
 	//  Scroll the background
 	starfield.tilePosition.x -= 2;
-	//  Fire bullet
+ //  Check collisions
+	game.physics.arcade.overlap(player, enemies, shipCollide, null, this);
+	game.physics.arcade.overlap(enemies, bullets, hitEnemy, null, this);
+
+	//  Game over?
+	if (! player.alive && gameOver.visible === false) {
+		gameOver.visible = true;
+		var fadeInGameOver = game.add.tween(gameOver);
+		fadeInGameOver.to({alpha: 1}, 1000, Phaser.Easing.Quintic.Out);
+		fadeInGameOver.onComplete.add(setResetHandlers);
+		fadeInGameOver.start();
+		function setResetHandlers() {
+			//  The "click to restart" handler
+			tapRestart = game.input.onTap.addOnce(_restart,this);
+			spaceRestart = fire_button.onDown.addOnce(_restart,this);
+			function _restart() {
+			tapRestart.detach();
+			spaceRestart.detach();
+			restart();
+			}
+		}
+	}
+ }
 
 
 	// Player Movement
 
 
-}
+
 
 function render() {
+
+}
+
+function shipCollide(player, enemy) {
+	explode.play();
+	var explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
+	explosion.anchor.setTo(0.5, 0.5);
+    explosion.animations.add('boom');
+    explosion.play('boom', 15, false, true);
+    player.damage(20);
+    shields.render();
+    enemy.kill();
+}
+
+function hitEnemy(enemy, bullet) {
+	explode.play();
+	var explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
+	explosion.anchor.setTo(0.5, 0.5);
+    explosion.animations.add('boom');
+    explosion.play('boom', 15, false, true);
+    enemy.kill();
+	bullet.kill()
+	// Increase score
+	score += 20;
+	scoreText.render()
+}
+
+function restart () {
+	//  Reset the enemies
+	enemies.callAll('kill');
+	game.time.events.remove(launchTimer);
+	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 100, function(){enemies.launchEnemy()}, this);
+
+
+
+	//  Revive the player
+	player.revive();
+	player.health = 100;
+	shields.render();
+	score = 0;
+	scoreText.render();
+
+	//  Hide the text
+	gameOver.visible = false;
 
 }
