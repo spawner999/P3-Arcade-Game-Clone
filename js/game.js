@@ -115,10 +115,10 @@ EnemyGroup.prototype.launchEnemy = function(){
 	var ENEMY_SPEED = 300;
 	var enemy = this.getFirstExists(false);
 	if (enemy) {
-			enemy.reset(game.rnd.integerInRange(0, game.width), -20);
-			enemy.body.velocity.x = game.rnd.integerInRange(-300, 300);
-			enemy.body.velocity.y = ENEMY_SPEED;
-			enemy.body.drag.x = 100;
+			enemy.reset(820, game.rnd.integerInRange(0, 500));
+			enemy.body.velocity.x = -300;
+			enemy.body.velocity.y = game.rnd.integerInRange(0, 300);
+			enemy.body.drag.y = 300;;
 		}
 }
 
@@ -148,7 +148,7 @@ function create() {
     enemies = new EnemyGroup(game);
 
     music.play();
-   	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 100, function(){enemies.launchEnemy()}, this);
+   	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1, 100, function(){enemies.launchEnemy()}, this);
 
 	shields = game.add.text(game.world.width - 150, 10, 'Shields: ' + player.health +'%', { font: '20px Arial', fill: '#fff' });
 	shields.render = function () {
@@ -240,7 +240,7 @@ function restart () {
 	//  Reset the enemies
 	enemies.callAll('kill');
 	game.time.events.remove(launchTimer);
-	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1.5, 100, function(){enemies.launchEnemy()}, this);
+	launchTimer = game.time.events.repeat(Phaser.Timer.SECOND * 1, 100, function(){enemies.launchEnemy()}, this);
 
 
 
