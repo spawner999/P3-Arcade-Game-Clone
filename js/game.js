@@ -16,7 +16,7 @@ var launchTimer;
 
 //Player entity, extends Sprite class
 var Player = function(game){
-	this.health = 20;
+	this.health = 100;
 	Phaser.Sprite.call(this, game, 0, 300, 'ship');
 	this.anchor.setTo(-0.25, 0);
 	game.add.existing(this);
