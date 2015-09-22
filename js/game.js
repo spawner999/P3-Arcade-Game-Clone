@@ -209,6 +209,9 @@ function restart () {
 	//Hide the text
 	gameOver.visible = false;
 }
+
+function render(){
+  }
  
 /*
 *
@@ -226,7 +229,7 @@ function launchWave1(){
 	//Takes enemy from pool and launches it
 	var enemy = enemies.getFirstExists(false);
 	if (enemy) {
-			enemy.reset(820, game.rnd.integerInRange(0, 500));
+			enemy.reset(820, game.rnd.integerInRange(30, 480));
 			enemy.body.velocity.x = -300;
 			enemy.body.velocity.y = game.rnd.integerInRange(0, 300);
 			enemy.body.drag.y = 300;
