@@ -13,6 +13,8 @@ var shields;
 var gameOver;
 var enemyTimer;
 var ufoTimer;
+var BULLET_SPEED = 200;
+var BULLET_SPACING = 400;
 
 /*
 *
@@ -66,8 +68,6 @@ Player.prototype.update = function(){
 Player.prototype.fireBullet = function(bullet_type){
 	// To avoid them being allowed to fire too fast we set a time limit
 	if (game.time.now > bulletTimer){
-		var BULLET_SPEED = 400;
-		var BULLET_SPACING = 400;
 		//Grab the first bullet we can from the pool
 		var bullet = bullet_type.getFirstExists(false);
 		if (bullet){
@@ -77,7 +77,7 @@ Player.prototype.fireBullet = function(bullet_type){
 			bullet.reset(player.x + bulletOffset, player.y);
 			bullet.angle = player.angle;
 			game.physics.arcade.velocityFromAngle(bullet.angle, BULLET_SPEED, bullet.body.velocity);
-			bullet.body.velocity.x += player.body.velocity.x;
+			bullet.body.velocity.x += BULLET_SPEED;
 			laser.play();
 			//Increase Timer
 			bulletTimer = game.time.now + BULLET_SPACING;
@@ -90,7 +90,7 @@ var BulletGroup = function(game){
 	Phaser.Group.call(this, game);
 	this.enableBody = true;
 	this.physicsBodyType = Phaser.Physics.ARCADE;
-	this.createMultiple(6, 'bullet');
+	this.createMultiple(4, 'bullet');
 	this.setAll('anchor.x', -1.5);
 	this.setAll('anchor.y', -5);
 	this.setAll('outOfBoundsKill', true);
@@ -126,14 +126,14 @@ EnemyGroup.prototype.constructor = EnemyGroup;
 
 //This function is used to load resources
 function preload(){
-	game.load.image('starfield', 'images/space-1.jpg');
+	game.load.image('starfield', 'images/space-2.jpg');
 	game.load.image('ship', 'images/player_ship.png');
 	game.load.image('bullet', 'images/laser.png');
 	game.load.image('enemy', 'images/enemy.png');
-	game.load.image('rocks', 'images/asteroids.png');
 	game.load.image('ufo', 'images/ufo.png');
 	game.load.spritesheet('explosion', 'images/explosion.png', 128, 128);
 	game.load.audio('laser', 'images/laser2.ogg');
+	game.load.audio('loop', 'images/loop.mp3');
 	game.load.audio('explode', 'images/explosion.ogg');
 }
 
@@ -143,6 +143,8 @@ function create(){
 	player = new Player(game);
 	laser = game.add.audio('laser');
 	explode = game.add.audio('explode');
+	loop = game.add.audio('loop');
+	loop.loopFull();
 	bullets = new BulletGroup(game);
 	enemies = new EnemyGroup(game, 'enemy');
 	ufo = new EnemyGroup(game, 'ufo');
@@ -249,40 +251,33 @@ function launchEnemy(){
 	};
 }
 
-//This function handles the spawn of the first enemy wave, the eventTimer recursively recalls the function
-//after a randomly generated delay
+//This function handles the spawn of the first ufo wave, the eventTimer recursively recalls the function
+//after a fixed delay
 function launchUfo(){
-   var startingspd = game.rnd.integerInRange(25, 480);
-   var verticalSpeed = 120;
-   var spread = 60;
-   var frequency = 70;
-   var verticalSpacing = 70;
-   var numEnemiesInWave = 3;
-   var timeBetweenWaves = 7000;
-   var startingspd;
-
-   //  Launch wave
-    var enemy = ufo.getFirstExists(false);
-    if (enemy) {
-       	this.startingspd = startingspd;
-        enemy.reset(820, this.startingspd);
-        enemy.body.velocity.x = -verticalSpeed;
-
-        //  Update function for each enemy
-        enemy.update = function(){
-        //  Wave movement
-        this.body.y = Math.sin((this.x) / frequency) * spread + startingspd;
-
-        //  Squish and rotate ship for illusion of "banking"
-
-
-        //  Kill enemies once they go off screen
-        if (this.y > game.height + 200) {
-        this.kill();
-        }
-
-       }
-   }
+	var startingspd = game.rnd.integerInRange(25, 480);
+	var verticalSpeed = 120;
+	var spread = 60;
+	var frequency = 70;
+	var verticalSpacing = 70;
+	var numEnemiesInWave = 3;
+	var timeBetweenWaves = 7000;
+	var startingspd;
+	//Launch wave
+	var enemy = ufo.getFirstExists(false);
+	if (enemy) {
+		this.startingspd = startingspd;
+		enemy.reset(820, this.startingspd);
+		enemy.body.velocity.x = -verticalSpeed;
+		//Update function for each enemy
+		enemy.update = function(){
+			//Wave movement
+			this.body.y = Math.sin((this.x) / frequency) * spread + startingspd;
+			//Kill enemies once they go off screen
+			if (this.y > game.height + 200) {
+			this.kill();
+			}
+		}
+	}
 
    //  Send another wave soon
    blueEnemyLaunchTimer = game.time.events.add(timeBetweenWaves, launchUfo);
