@@ -4,7 +4,6 @@ var game = new Phaser.Game(800,600, Phaser.AUTO, 'phaser-demo', {preload: preloa
 //Variable Declarations
 var cursors;
 var fire_button;
-var bulletTimer = 0;
 var laser;
 var enemyLaser;
 var score = 0;
@@ -13,8 +12,10 @@ var shields;
 var gameOver;
 var enemyTimer;
 var ufoTimer;
-var BULLET_SPEED = 200;
-var BULLET_SPACING = 400;
+var BULLET_TIMER = 0;
+var BULLET_SPEED = 150;
+var BULLET_SPACING = 600;
+var SHIP_SPEED = 220;
 
 /*
 *
@@ -37,16 +38,16 @@ Player.prototype.constructor = Player;
 Player.prototype.update = function(){
 	this.body.velocity.setTo(0,0);
 	if(cursors.up.isDown){
-		this.body.velocity.y = -240;
+		this.body.velocity.y = -SHIP_SPEED;
 	}
 	if(cursors.down.isDown){
-		this.body.velocity.y = 240;
+		this.body.velocity.y = SHIP_SPEED;
 	}
 	if(cursors.left.isDown){
-		this.body.velocity.x = -240;
+		this.body.velocity.x = -SHIP_SPEED;
 	}
 	if(cursors.right.isDown){
-		this.body.velocity.x = 240;
+		this.body.velocity.x = SHIP_SPEED;
 	}
 	if(this.y > game.height -105){
 		this.y = game.height - 105;
@@ -67,7 +68,7 @@ Player.prototype.update = function(){
 //This method handles bullet firing, can be used for different kinds of ammo
 Player.prototype.fireBullet = function(bullet_type){
 	// To avoid them being allowed to fire too fast we set a time limit
-	if (game.time.now > bulletTimer){
+	if (game.time.now > BULLET_TIMER){
 		//Grab the first bullet we can from the pool
 		var bullet = bullet_type.getFirstExists(false);
 		if (bullet){
@@ -80,7 +81,7 @@ Player.prototype.fireBullet = function(bullet_type){
 			bullet.body.velocity.x += BULLET_SPEED;
 			laser.play();
 			//Increase Timer
-			bulletTimer = game.time.now + BULLET_SPACING;
+			BULLET_TIMER = game.time.now + BULLET_SPACING;
 		}
 	}
 };
@@ -90,7 +91,7 @@ var BulletGroup = function(game){
 	Phaser.Group.call(this, game);
 	this.enableBody = true;
 	this.physicsBodyType = Phaser.Physics.ARCADE;
-	this.createMultiple(4, 'bullet');
+	this.createMultiple(3, 'bullet');
 	this.setAll('anchor.x', -1.5);
 	this.setAll('anchor.y', -5);
 	this.setAll('outOfBoundsKill', true);
@@ -100,6 +101,22 @@ var BulletGroup = function(game){
 //Extends phaser Group class
 BulletGroup.prototype = Object.create(Phaser.Group.prototype);
 BulletGroup.prototype.constructor = BulletGroup;
+
+//PowerUp class
+var PowerUpGroup = function(game, sprite){
+	Phaser.Group.call(this, game);
+	this.enableBody = true;
+	this.physicsBodyType = Phaser.Physics.ARCADE;
+	this.createMultiple(3, sprite);
+	this.setAll('anchor.x', -1.5);
+	this.setAll('anchor.y', -5);
+	this.setAll('outOfBoundsKill', true);
+	this.setAll('checkWorldBounds', true);
+	game.add.group();
+};
+//Extends phaser Group class
+PowerUpGroup.prototype = Object.create(Phaser.Group.prototype);
+PowerUpGroup.prototype.constructor = BulletGroup;
 
 
 //Enemy class
@@ -228,8 +245,8 @@ function render(){
 //This function handles the spawn of the first enemy wave, the eventTimer recursively recalls the function
 //after a randomly generated delay
 function launchEnemy(){
-	var MIN_ENEMY_SPACING = 750;
-	var MAX_ENEMY_SPACING = 4000;
+	var MIN_ENEMY_SPACING = 550;
+	var MAX_ENEMY_SPACING = 3000;
 	var ENEMY_SPEED = 300;
 	//Takes enemy from pool and launches it
 	var enemy = enemies.getFirstExists(false);
@@ -258,9 +275,7 @@ function launchUfo(){
 	var verticalSpeed = 120;
 	var spread = 60;
 	var frequency = 70;
-	var verticalSpacing = 70;
-	var numEnemiesInWave = 3;
-	var timeBetweenWaves = 7000;
+	var timeBetweenWaves = 6000;
 	var startingspd;
 	//Launch wave
 	var enemy = ufo.getFirstExists(false);
@@ -280,7 +295,7 @@ function launchUfo(){
 	}
 
    //  Send another wave soon
-   blueEnemyLaunchTimer = game.time.events.add(timeBetweenWaves, launchUfo);
+   ufoTimer = game.time.events.add(timeBetweenWaves, launchUfo);
 }
 
 //Collision between player and enemy ships
