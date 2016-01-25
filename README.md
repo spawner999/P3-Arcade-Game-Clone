@@ -1,31 +1,31 @@
-frontend-nanodegree-arcade-game
-===============================
+# P3-Arcade-Game-Clone
 
+####By: Lorenzo Ferrario
 
-How to install and play the game:
+##Description
+Arcade-Game-Clone is a space shooter game entirely developed using Javascript.
+Online version is available [here](http://spawner999.github.io/P3-Arcade-Game-Clone)
 
-- Download or Clone GitHub repo
+##Installation
+1. Clone this repository or download it in a .zip file
+2. Install a web server on your machine or alternatively use [Google Dev Editor](https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg)
+3. Open index.html in a browser of you choice
 
-- Install a web server on your machine or alternatively
-use Google Dev Editor: https://chrome.google.com/webstore/detail/chrome-dev-editor-develop/pnoffddplpippgcfjdhbmhkofpnaalpg
+##How to Play
+* Press arrows to move and spacebar to shoot
 
-- Open index.html and you are ready to play
+* Avoid ufos and enemies ship
 
-- Press arrows to move and spacebar to shoot
+* Each time you hit an enemy with your laser you gain 20 points
 
-- Avoid ufos and enemies ship
+* Collect powerUps to partially regain lost shields
 
-- Each time you hit an enemy with your laser you gain 20 points
+* Killing an enemy increases its spawn rate, meaning the game's difficulty increases over time
 
-- Collect powerUps to partially regain lost shields
+* Game ends once your shields drop under 0%
 
--Killing an enemy increases its spawn rate, meaning the game's difficulty increases over time
+## Technologies Used
+* [Phaser Game Engine](http://phaser.io/)
 
-- Game ends once your shields drop under 0%
-
-
-About:
-
-- Game developed using Phaser.js game engine: http://phaser.io/
-
-
+##License
+MIT License. Copyright (c) 2015 Lorenzo Ferrario
